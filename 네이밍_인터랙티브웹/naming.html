@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NAMING. — BOLD NATURAL</title>
+<!--
+  ===== 이미지 넣는 법 =====
+  html 옆에 images 폴더 만들고 아래 파일명으로 넣으면 바로 적용 (없으면 회색 박스 + 파일명 표시)
+  intro.mp4            시작 영상 (없으면 자동 건너뜀)
+  hero_1~3.jpg         메인 배너 슬라이드 (가로형, JS의 HERO 배열)
+  상품_before.jpg      제품별 비포 (예: overdew_before.jpg, 없으면 before.jpg)
+  philosophy.jpg       브랜드 철학 섹션 (세로형)
+  before.jpg/after.jpg 얼굴 비포/애프터 (4:5, 같은 구도)
+  상품 이미지          JS의 PRODUCTS 배열 img / hover 경로 (3:4 세로)
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<style>
+  :root{
+    --bg:#ffffff; --paper:#f5f5f3; --ink:#111111; --sub:#8e8e8e; --line:#e6e6e6; --point:#e0475c;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);color:var(--ink);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+  body.lock{overflow:hidden}
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  a{color:inherit;text-decoration:none}
+  img{display:block;width:100%;height:100%;object-fit:cover}
+  .serif{font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.04em}
+  .serif i, h1 i, h2 i{font-style:normal;font-weight:300}
+  .label{font-size:11px;letter-spacing:.18em;text-transform:uppercase}
+
+  /* 이미지 placeholder */
+  .ph{position:relative;background:#efefed;overflow:hidden}
+  .ph::after{content:attr(data-label);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:#a59c92;text-align:center;padding:8px;z-index:0;letter-spacing:.05em}
+  .ph img{position:relative;z-index:1}
+  .ph:has(img)::after{content:none}   /* 사진이 있으면 파일명 글자 숨김 */
+
+  /* 스크롤 등장 */
+  .reveal{opacity:0;transform:translateY(40px);transition:opacity 1s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)}
+  .reveal.in{opacity:1;transform:none}
+
+  /* ===== 시작 영상 ===== */
+  /* 인트로: ① 쿠션 열리며 다가옴 → ② 흰 화면 + 검정 NAMING. 페이드인 → ③ 웹페이지 */
+  #intro{position:fixed;inset:0;background:linear-gradient(#cfd2d6,#eeeff1 70%);z-index:999;overflow:hidden;transition:opacity 1s, visibility 1s}
+  #intro video,#intro .seq,#intro .seq img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  #intro .seq{display:none}
+  #intro .seq img{object-fit:contain}  /* 세로 사진이 잘리지 않게 */
+  #intro .seq img{opacity:0}
+  #intro.fallback .seq{display:block}
+  #intro.fallback .seq .s1{animation:introS1 2.4s cubic-bezier(.4,0,.2,1) forwards}
+  #intro.fallback .seq .s2{animation:introS2 2.6s 1.6s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes introS1{0%{opacity:0;transform:scale(1)}20%{opacity:1}100%{opacity:1;transform:scale(1.18)}}
+  @keyframes introS2{0%{opacity:0;transform:scale(1.15)}35%{opacity:1}100%{opacity:1;transform:scale(1.5)}}
+  #intro .veil{position:absolute;inset:0;background:#fff;opacity:0;transition:opacity .9s ease;z-index:2}
+  #intro .logo-big{position:absolute;inset:0;z-index:3;display:flex;align-items:center;justify-content:center;color:var(--ink);font-size:clamp(56px,11vw,160px);
+    opacity:0;letter-spacing:.08em;filter:blur(10px);transition:opacity 1.2s ease .3s, letter-spacing 1.8s cubic-bezier(.2,.7,.2,1) .3s, filter 1.2s ease .3s;pointer-events:none}
+  #intro.logo .veil{opacity:1}
+  #intro.logo .logo-big{opacity:1;letter-spacing:-.04em;filter:blur(0)}
+  #intro.hide{opacity:0;visibility:hidden}
+  #intro .skip{position:absolute;right:32px;bottom:32px;z-index:4;color:var(--ink)}
+  #intro .skip:hover{text-decoration:underline}
+
+  /* ===== 헤더 ===== */
+  header{position:fixed;top:0;left:0;right:0;z-index:50;transition:background .4s, color .4s}
+  header.solid{background:var(--bg);border-bottom:1px solid var(--line)}
+  .nav{padding:22px 36px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center}
+  .nav .left,.nav .right{display:flex;gap:28px}
+  .nav .right{justify-content:flex-end}
+  .nav a,.nav button{position:relative}
+  .nav a::after,.nav button::after{content:'';position:absolute;left:0;bottom:-3px;width:0;height:1px;background:currentColor;transition:.3s}
+  .nav a:hover::after,.nav button:hover::after{width:100%}
+  .logo{font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.04em;font-size:30px;letter-spacing:.02em}
+
+  /* ===== 히어로 ===== */
+  .hero{height:100vh;min-height:640px;position:relative;display:flex;align-items:flex-end}
+  .hero .bg{position:absolute;inset:0}
+  /* 히어로 슬라이드: 크로스페이드 + 천천히 줌아웃 */
+  .hero .slide{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease}
+  .hero .slide.on{opacity:1;z-index:1}
+  .hero .slide img{transform:scale(1.1);transition:transform 0s 1.2s}
+  .hero .slide.on img{transform:scale(1);transition:transform 6s cubic-bezier(.2,.6,.3,1)}
+  /* 배너 글자 가독성: 위·아래 어두운 그라데이션 + 흰 글씨 */
+  .hero .bg::after{content:'';position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:linear-gradient(to bottom, rgba(0,0,0,.38) 0%, rgba(0,0,0,0) 22%, rgba(0,0,0,0) 40%, rgba(0,0,0,.62) 100%)}
+  .hero .txt{color:#fff;text-shadow:0 2px 24px rgba(0,0,0,.25)}
+  .hero .copy a{border-bottom-color:#fff}
+  header:not(.solid){color:#fff}
+  .hero .dots{position:absolute;top:96px;right:36px;z-index:3;display:flex;align-items:center;gap:10px;color:#fff}
+  .hero .dots .num{font-size:11px;letter-spacing:.18em;margin-right:6px}
+  .hero .dots button{width:40px;height:2px;background:rgba(255,255,255,.35);position:relative;overflow:hidden;padding:8px 0;background-clip:content-box}
+  .hero .dots button i{position:absolute;left:0;right:0;top:8px;height:2px;background:#fff;transform:scaleX(0);transform-origin:left}
+  .hero .dots button.on i{animation:prog 5s linear forwards}
+  .hero .dots button.done i{transform:none}
+  @keyframes prog{to{transform:none}}
+  .hero .txt{position:relative;z-index:2;padding:0 36px 56px;width:100%;display:flex;justify-content:space-between;align-items:flex-end;gap:24px}
+  .hero h1{font-size:clamp(64px,13vw,210px);line-height:.85;letter-spacing:-.02em}
+  .hero h1 .ln{display:block;overflow:hidden}
+  .hero h1 .ln span{display:inline-block;transform:translateY(105%);transition:transform 1.2s cubic-bezier(.2,.8,.2,1)}
+  .hero.ready h1 .ln span{transform:none}
+  .hero.ready h1 .ln:nth-child(2) span{transition-delay:.12s}
+  .hero .copy{max-width:280px;font-size:14px;line-height:1.7;padding-bottom:14px}
+  .hero .copy a{display:inline-block;margin-top:18px;border-bottom:1px solid var(--ink);padding-bottom:2px}
+
+  /* 마키 */
+  .marquee{border-top:1px solid var(--line);border-bottom:1px solid var(--line);overflow:hidden;white-space:nowrap;padding:16px 0}
+  .marquee div{display:inline-block;animation:mq 30s linear infinite;font-size:22px}
+  .marquee span{margin:0 28px}
+  @keyframes mq{to{transform:translateX(-50%)}}
+
+  section{padding:120px 36px}
+  .sec-head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:48px;gap:20px;flex-wrap:wrap}
+  .sec-head h2{font-size:clamp(44px,6vw,88px);line-height:.95}
+
+  /* ===== 컬렉션 ===== */
+  .filter{display:flex;gap:22px}
+  .filter button{color:var(--sub);transition:color .3s}
+  .filter button.on{color:var(--ink);text-decoration:underline;text-underline-offset:5px}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:40px 20px}
+  .card{cursor:pointer}
+  .card .thumb{aspect-ratio:3/4;position:relative}
+  .card .thumb .main,.card .thumb .hov{position:absolute;inset:0;transition:opacity .6s, transform 1s cubic-bezier(.2,.7,.2,1)}
+  .card .thumb .hov{opacity:0;transform:scale(1.05)}
+  .card:hover .thumb .main{opacity:0}
+  .card:hover .thumb .hov{opacity:1;transform:scale(1)}
+  .card .tag{position:absolute;top:14px;left:14px;z-index:3}
+  .card .info{display:flex;justify-content:space-between;align-items:flex-start;padding-top:16px;gap:10px}
+  .card .name{font-size:14px;font-weight:600;line-height:1.4}
+  .card .cname{font-size:12px;color:var(--sub);margin-top:4px}
+  .card .price{font-size:14px;white-space:nowrap}
+  .card .bottom{display:flex;justify-content:space-between;align-items:center;margin-top:14px}
+  .add{font-size:11px;letter-spacing:.18em;padding-bottom:2px;border-bottom:1px solid transparent;transition:.3s}
+  .add:hover{border-color:var(--ink)}
+
+  /* 컬러칩 */
+  .chips{display:flex;gap:7px}
+  .chip{width:16px;height:16px;border-radius:50%;outline:1px solid transparent;outline-offset:3px;transition:transform .2s, outline-color .2s}
+  .chip:hover{transform:scale(1.2)}
+  .chip.on{outline-color:var(--ink)}
+
+  /* ===== 철학 ===== */
+  .philo{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;background:var(--paper)}
+  .philo .ph{aspect-ratio:4/5}
+  .philo h2{font-size:clamp(40px,4.6vw,72px);line-height:1;margin:20px 0 48px}
+  .philo ul{list-style:none;border-top:1px solid var(--line)}
+  .philo li{padding:22px 0;border-bottom:1px solid var(--line);display:flex;gap:24px;font-size:15px;line-height:1.6}
+  .philo li b{min-width:110px;font-size:12px;letter-spacing:.18em;padding-top:3px}
+
+  /* ===== 파인더 (커스터마이징 탭) ===== */
+  .finder{display:grid;grid-template-columns:340px 1fr;gap:60px}
+  .tabs{border-top:1px solid var(--ink)}
+  .tab{width:100%;display:flex;justify-content:space-between;align-items:center;padding:24px 0;border-bottom:1px solid var(--line);text-align:left;transition:padding .3s}
+  .tab .n{font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.04em;font-size:28px;color:var(--sub);transition:color .3s}
+  .tab .t{flex:1;margin-left:18px;font-size:16px}
+  .tab .v{font-size:12px;color:var(--point)}
+  .tab.on{padding-left:12px}
+  .tab.on .n{color:var(--ink)}
+  .options{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+  .opt{padding:13px 24px;border:1px solid var(--ink);border-radius:40px;font-size:14px;transition:.25s}
+  .opt:hover,.opt.on{background:var(--ink);color:var(--bg)}
+  .reset{margin-top:24px;font-size:12px;color:var(--sub);text-decoration:underline}
+  .reco{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;align-content:start}
+  .reco-item{cursor:pointer;animation:fadeUp .6s both}
+  .reco-item .ph{aspect-ratio:3/4}
+  .reco-item p{font-size:13px;margin-top:12px;display:flex;justify-content:space-between}
+  .reco-empty{grid-column:1/-1;border:1px dashed var(--line);padding:80px 20px;text-align:center;color:var(--sub);font-size:14px}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+  /* ===== 4 스텝 ===== */
+  .steps-head{display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:end;margin-bottom:60px}
+  .steps-head .big{font-size:clamp(140px,18vw,280px);line-height:.75}
+  .steps-head h2{font-size:clamp(40px,5vw,72px);line-height:1}
+  .steps-head p{font-size:14px;color:var(--sub);margin-top:12px}
+  .step{display:grid;grid-template-columns:120px 1fr 1fr 220px;gap:32px;padding:36px 0;border-top:1px solid var(--line);align-items:center;cursor:pointer;transition:background .4s, padding .4s}
+  .step:last-child{border-bottom:1px solid var(--line)}
+  .step:hover{background:var(--paper);padding-left:20px;padding-right:20px}
+  .step .no{font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.04em;font-size:40px}
+  .step .kind{font-size:clamp(28px,3vw,44px);font-family:'Pretendard',sans-serif;font-weight:800;letter-spacing:-.04em}
+  .step .pname{font-size:12px;letter-spacing:.18em;margin-bottom:10px}
+  .step .pdesc{font-size:14px;line-height:1.7;color:#58524c}
+  .step .ph{aspect-ratio:1;opacity:.85;transition:opacity .4s}
+  .step:hover .ph{opacity:1}
+
+  footer{padding:80px 36px 36px;border-top:1px solid var(--ink)}
+  footer .f-logo{font-size:clamp(80px,20vw,300px);line-height:.8;letter-spacing:-.02em}
+  footer .f-row{display:flex;justify-content:space-between;margin-top:40px;font-size:12px;color:var(--sub);flex-wrap:wrap;gap:12px}
+
+  /* ===== 상세페이지 ===== */
+  #detail{position:fixed;inset:0;z-index:100;background:var(--bg);overflow-y:auto;clip-path:inset(100% 0 0 0);transition:clip-path .9s cubic-bezier(.7,0,.2,1);visibility:hidden}
+  #detail.open{clip-path:inset(0 0 0 0);visibility:visible}
+  .d-close{position:fixed;top:26px;right:36px;z-index:5}
+  .d-top{display:grid;grid-template-columns:1.2fr 1fr;min-height:100vh}
+  .d-img{position:sticky;top:0;height:100vh}
+  .d-img img{transition:opacity .4s}
+  .d-info{padding:120px 56px 60px;display:flex;flex-direction:column}
+  .d-info h2{font-size:clamp(40px,4vw,64px);line-height:1;margin:16px 0 24px}
+  .d-desc{font-size:15px;line-height:1.8;color:#58524c}
+  .d-price{font-size:20px;margin:28px 0;padding-bottom:28px;border-bottom:1px solid var(--line)}
+  .d-info .chips .chip{width:28px;height:28px}
+  .d-color{margin:0 0 14px}
+  .d-color b{font-weight:600}
+  .qty{display:flex;align-items:center;border:1px solid var(--line);width:max-content}
+  .qty button{width:40px;height:40px;font-size:16px}
+  .qty span{width:36px;text-align:center;font-size:14px}
+  .d-btns{display:flex;flex-direction:column;gap:10px;margin-top:32px}
+  .d-btns button{padding:20px;font-size:12px;letter-spacing:.18em}
+  .btn-line{border:1px solid var(--ink)!important;transition:.3s}
+  .btn-line:hover{background:var(--ink);color:var(--bg)}
+  .btn-dark{background:var(--ink);color:var(--bg)}
+
+  .ba-link{margin-top:28px;padding:18px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:16px;text-align:left;width:100%}
+  .ba-link .ba-thumb{width:56px;height:70px;flex:none;background:#efefed center/cover no-repeat}
+  .ba-link small{font-size:13px;color:var(--sub)}
+  .ba-link .arrow{margin-left:auto;font-size:18px;animation:nudge 1.4s ease-in-out infinite}
+  .ba-link:hover small{color:var(--ink)}
+  @keyframes nudge{50%{transform:translateY(5px)}}
+  .ba-chips{margin-top:14px;gap:10px}
+  .ba-chips .chip{width:32px;height:32px}
+  .ba-wrap{padding:120px 36px;display:grid;grid-template-columns:1fr 1.2fr;gap:80px;align-items:center;border-top:1px solid var(--line)}
+  .ba-wrap h2{font-size:clamp(44px,5vw,80px);line-height:.95;margin:18px 0 20px}
+  .ba-wrap p{font-size:14px;color:var(--sub);line-height:1.7}
+  .ba{position:relative;aspect-ratio:4/5;overflow:hidden;user-select:none;cursor:ew-resize;touch-action:none}
+  .ba>.ph{position:absolute;inset:0}
+  .ba .after{clip-path:inset(0 0 0 50%);z-index:2}   /* 애프터가 비포 위에 오도록 */
+  .ba.anim .after{transition:clip-path .9s cubic-bezier(.7,0,.2,1)}
+  .ba.anim .bar,.ba.anim .handle{transition:left .9s cubic-bezier(.7,0,.2,1)}
+  .ba .bar{position:absolute;top:0;bottom:0;left:50%;width:1px;background:#fff;z-index:3;pointer-events:none}
+  .ba .handle{position:absolute;top:50%;left:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:50%;border:1px solid #fff;color:#fff;backdrop-filter:blur(6px);background:rgba(255,255,255,.15);z-index:4;pointer-events:none;display:flex;align-items:center;justify-content:center;font-size:10px;letter-spacing:.15em}
+  .ba .tag{position:absolute;bottom:20px;z-index:3;color:#fff}
+
+  /* 확대 인터랙션 */
+  .zoomable{cursor:zoom-in}
+  .zoomable .zlayer{position:absolute;inset:0;z-index:2;opacity:0;transition:opacity .45s;overflow:hidden}
+  .zoomable .zlayer img{transition:transform .7s cubic-bezier(.2,.7,.2,1)}
+  .zoomable:hover .zlayer{opacity:1}
+  .zoomable:hover .zlayer img{transform:scale(1.8)}
+  .card .thumb .hov img{transition:transform .8s cubic-bezier(.2,.7,.2,1)}
+  .card:hover .thumb .hov img{transform:scale(1.15)}
+  .lens{position:absolute;width:180px;height:180px;border-radius:50%;border:2px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.25);
+    background:#efefed no-repeat;pointer-events:none;z-index:5;opacity:0;transform:scale(.5);transition:opacity .25s, transform .3s cubic-bezier(.2,.8,.2,1)}
+  .ba:hover .lens{opacity:1;transform:scale(1)}
+  .ba.dragging .lens{opacity:0;transform:scale(.5)}
+  .ba .tag.l{left:20px}.ba .tag.r{right:20px}
+
+  /* ===== 장바구니 ===== */
+  #dim{position:fixed;inset:0;background:rgba(20,19,18,.4);z-index:150;opacity:0;pointer-events:none;transition:.5s}
+  #dim.on{opacity:1;pointer-events:auto}
+  #cart{position:fixed;top:0;right:0;width:440px;max-width:100%;height:100%;background:var(--bg);z-index:160;transform:translateX(100%);transition:.7s cubic-bezier(.7,0,.2,1);display:flex;flex-direction:column}
+  #cart.open{transform:none}
+  .c-head{padding:28px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+  .c-list{flex:1;overflow-y:auto;padding:0 28px}
+  .c-item{display:grid;grid-template-columns:84px 1fr auto;gap:16px;padding:22px 0;border-bottom:1px solid var(--line);animation:fadeUp .5s both}
+  .c-item .ph{width:84px;height:112px}
+  .c-item .n{font-size:14px;font-weight:600}
+  .c-item .o{font-size:12px;color:var(--sub);margin:6px 0 14px;display:flex;align-items:center;gap:6px}
+  .c-item .o i{width:10px;height:10px;border-radius:50%}
+  .c-item .qty button{width:30px;height:30px}
+  .c-item .qty span{width:28px;font-size:13px}
+  .c-item .right{text-align:right;font-size:14px;display:flex;flex-direction:column;justify-content:space-between}
+  .c-item .del{font-size:11px;color:var(--sub);text-decoration:underline}
+  .c-empty{text-align:center;padding:100px 0;font-size:28px;line-height:1.2}
+  .c-foot{padding:28px;border-top:1px solid var(--line)}
+  .c-total{display:flex;justify-content:space-between;margin-bottom:18px}
+  .c-foot .btn-dark{width:100%;padding:20px;font-size:12px;letter-spacing:.18em}
+
+  #toast{position:fixed;left:50%;bottom:36px;transform:translate(-50%,30px);background:var(--ink);color:var(--bg);padding:14px 26px;font-size:13px;z-index:300;opacity:0;transition:.4s;pointer-events:none}
+  #toast.on{opacity:1;transform:translate(-50%,0)}
+
+  @media(max-width:960px){
+    .nav{padding:18px 20px}.nav .left{display:none}.nav{grid-template-columns:auto 1fr}.nav .right{gap:18px}
+    section{padding:80px 20px}
+    .hero .txt{flex-direction:column;align-items:flex-start;padding:0 20px 40px}
+    .grid{grid-template-columns:repeat(2,1fr);gap:32px 12px}
+    .philo,.finder,.d-top,.ba-wrap{grid-template-columns:1fr;gap:40px}
+    .reco{grid-template-columns:repeat(2,1fr)}
+    .step{grid-template-columns:60px 1fr;gap:16px}
+    .step .ph,.step .pdesc{display:none}
+    .d-img{position:relative;height:auto;aspect-ratio:1}
+    .d-info{padding:40px 20px}
+    .ba-wrap{padding:80px 20px}
+    footer{padding:60px 20px 24px}
+  }
+</style>
+</head>
+<body class="lock">
+
+<!-- 시작 영상 -->
+<div id="intro">
+  <video id="introVideo" src="images/intro.mp4" autoplay muted playsinline></video>
+  <!-- 영상 없을 때: 닫힌 쿠션 → 열린 쿠션 사진으로 같은 흐름 -->
+  <div class="seq">
+    <img class="s1" src="images/layered_19p.jpg" alt="" onerror="this.remove()">
+    <img class="s2" src="images/layered_19p_hover.jpg" alt="" onerror="this.remove()">
+  </div>
+  <div class="veil"></div>
+  <div class="logo-big serif">NAMING.</div>
+  <button class="skip label" onclick="closeIntro()">Skip →</button>
+</div>
+
+<header id="header">
+  <div class="nav">
+    <div class="left label">
+      <a href="#collection">Shop</a>
+      <a href="#philosophy">Brand Story</a>
+      <a href="#finder">Finder</a>
+    </div>
+    <a href="#" class="logo">NAMING.</a>
+    <div class="right label">
+      <a href="#">Account</a>
+      <button onclick="openCart()">Cart ( <span id="cartCount">0</span> )</button>
+    </div>
+  </div>
+</header>
+
+<!-- 히어로 -->
+<div class="hero" id="hero">
+  <div class="bg" id="heroSlides"></div>
+  <div class="dots" id="heroDots"></div>
+  <div class="txt">
+    <h1 class="serif"><span class="ln"><span>Bold</span></span><span class="ln"><span><i>Natural.</i></span></span></h1>
+    <div class="copy">
+      내추럴이란, 개인의 개성과 취향을<br>선명하게 드러내는 것.
+      <br><a href="#collection" class="label">Shop the collection</a>
+    </div>
+  </div>
+</div>
+
+<div class="marquee serif"><div id="mq"></div></div>
+
+<!-- 컬렉션 -->
+<section id="collection">
+  <div class="sec-head reveal">
+    <div>
+      <p class="label" style="color:var(--sub);margin-bottom:14px">The Collection</p>
+      <h2 class="serif">Name your<br><i>own beauty.</i></h2>
+    </div>
+    <div class="filter label" id="filter"></div>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- 철학 -->
+<section class="philo" id="philosophy">
+  <div class="ph reveal" data-label="images/philosophy.jpg"><img src="images/philosophy.jpg" alt="" onerror="this.remove()"></div>
+  <div class="reveal">
+    <p class="label" style="color:var(--sub)">Our Philosophy</p>
+    <h2 class="serif">꾸민 듯 안 꾸민 듯,<br><i>가장 나다운</i> 얼굴.</h2>
+    <ul>
+      <li><b>BOLD</b>나의 취향을 숨기지 않고 선명하게</li>
+      <li><b>NATURAL</b>피부에 녹아드는 결, 가볍게 쌓이는 컬러</li>
+      <li><b>YOURS</b>모두에게 같은 정답이 아닌, 나에게 맞는 선택</li>
+    </ul>
+  </div>
+</section>
+
+<!-- 파인더 (커스터마이징 탭) -->
+<section id="finder">
+  <div class="sec-head reveal">
+    <div>
+      <p class="label" style="color:var(--sub);margin-bottom:14px">Makeup Finder</p>
+      <h2 class="serif">Find your <i>shade.</i></h2>
+    </div>
+    <p style="font-size:14px;color:var(--sub);max-width:280px;line-height:1.7">세 가지를 고르면 나에게 맞는 제품을 바로 추천해드려요.</p>
+  </div>
+  <div class="finder reveal">
+    <div>
+      <div class="tabs" id="tabs"></div>
+      <div class="options" id="options"></div>
+      <button class="reset" onclick="resetPicks()">다시 고르기</button>
+    </div>
+    <div class="reco" id="reco"></div>
+  </div>
+</section>
+
+<!-- 4 스텝 -->
+<section id="steps" style="background:var(--paper)">
+  <div class="steps-head reveal">
+    <div class="big serif">4</div>
+    <div>
+      <h2 class="serif">essential steps</h2>
+      <p>베이스부터 아이까지, BOLD NATURAL을 완성하는 네 단계</p>
+    </div>
+  </div>
+  <div id="stepList"></div>
+</section>
+
+<footer>
+  <div class="f-logo serif">NAMING.</div>
+  <div class="f-row label">
+    <span>© 2026 NAMING. Interactive Redesign</span>
+    <span>미디어디자인공학과 과제용 프로토타입</span>
+  </div>
+</footer>
+
+<!-- 상세페이지 -->
+<div id="detail">
+  <button class="d-close label" onclick="closeDetail()">Close ✕</button>
+  <div class="d-top">
+    <div class="d-img ph zoomable" id="dImgBox"></div>
+    <div class="d-info">
+      <p class="label" style="color:var(--sub)" id="dCat"></p>
+      <h2 class="serif" id="dName"></h2>
+      <p class="d-desc" id="dDesc"></p>
+      <p class="d-price" id="dPrice"></p>
+      <p class="d-color label">Color — <b id="dColorName"></b></p>
+      <div class="chips" id="dChips" style="margin-bottom:32px"></div>
+      <div class="qty"><button onclick="changeDQty(-1)">−</button><span id="dQty">1</span><button onclick="changeDQty(1)">+</button></div>
+      <div class="d-btns">
+        <button class="btn-line" onclick="addFromDetail(false)">ADD TO CART +</button>
+        <button class="btn-dark" onclick="addFromDetail(true)">BUY NOW</button>
+      </div>
+      <button class="ba-link" onclick="document.querySelector('.ba-wrap').scrollIntoView({behavior:'smooth'})">
+        <span class="ba-thumb" id="baThumb"></span>
+        <span><b class="label">Before / After</b><br><small id="baLinkTxt">이 컬러를 바른 모습 보기</small></span>
+        <span class="arrow">↓</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="ba-wrap">
+    <div>
+      <p class="label" style="color:var(--sub)">Before / After</p>
+      <h2 class="serif">See the<br><i>difference.</i></h2>
+      <p>가운데 원을 좌우로 드래그해서<br>사용 전후를 비교해보세요.<br>컬러를 바꾸면 애프터도 함께 바뀌어요.</p>
+      <p class="label" style="margin-top:32px;color:var(--ink)">Color — <b id="baColorName"></b></p>
+      <div class="chips ba-chips" id="baChips"></div>
+    </div>
+    <div class="ba" id="ba">
+      <div class="ph" id="baBefore" data-label="images/before.jpg"></div>
+      <div class="ph after" id="baAfter" data-label="images/after.jpg"></div>
+      <span class="tag l label">Before</span><span class="tag r label" id="baTag">After</span>
+      <div class="bar" id="baBar"></div>
+      <div class="handle" id="baHandle">DRAG</div>
+      <div class="lens" id="baLens"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 장바구니 -->
+<div id="dim" onclick="closeCart()"></div>
+<aside id="cart">
+  <div class="c-head label"><span>Shopping Cart ( <span id="cCount">0</span> )</span><button onclick="closeCart()">Close</button></div>
+  <div class="c-list" id="cList"></div>
+  <div class="c-foot">
+    <div class="c-total label"><span>Total</span><b id="cTotal" style="font-size:16px">0원</b></div>
+    <button class="btn-dark" onclick="toast('주문이 완료됐어요 (프로토타입)')">CHECKOUT</button>
+  </div>
+</aside>
+
+<div id="toast"></div>
+
+<script>
+/* =========================================================
+   상품 데이터 — 네이밍 실제 제품명·가격 기준
+   컬러명은 임시라서 실제 호수/컬러명으로 바꿔줘
+   tags: 파인더 추천용
+========================================================= */
+const PRODUCTS = [
+  { id:1, name:'레이어드 핏 쿠션', cat:'base', price:28000, badge:'Best',
+    desc:'얇게 겹겹이 쌓여 내 피부처럼 밀착되는 내추럴 커버 쿠션.',
+    tags:['cool','warm','neutral','oily','combi','natural'],
+    colors:[
+      {name:'19P', hex:'#f0dccb', img:'images/layered_19p.jpg', hover:'images/layered_19p_hover.jpg'},
+      {name:'21N', hex:'#e6c8ae', img:'images/layered_21n.jpg', hover:'images/layered_21n_hover.jpg'},
+      {name:'22N', hex:'#dcbb9d', img:'images/layered_22n.jpg', hover:'images/layered_22n_hover.jpg'},
+      {name:'23N', hex:'#d2ad8d', img:'images/layered_23n.jpg', hover:'images/layered_23n_hover.jpg'}
+    ]},
+  { id:4, name:'오버 듀 글로시 립 틴트', cat:'lip', price:17000,
+    desc:'입체적인 광택으로 입술을 도톰하게 채우는 글로시 틴트.',
+    tags:['cool','warm','neutral','dry','oily','combi','glow','mlbb'],
+    colors:[
+      {name:'01 로지', hex:'#d4737f', img:'images/overdew_01.jpg', hover:'images/overdew_01_hover.jpg'},
+      {name:'02 코랄', hex:'#e48468', img:'images/overdew_02.jpg', hover:'images/overdew_02_hover.jpg'},
+      {name:'03 브릭', hex:'#a64a3e', img:'images/overdew_03.jpg', hover:'images/overdew_03_hover.jpg'},
+      {name:'04 모브', hex:'#9c5d6c', img:'images/overdew_04.jpg', hover:'images/overdew_04_hover.jpg'}
+    ]},
+  { id:7, name:'블러리 치크밤', cat:'cheek', price:19000, badge:'New',
+    desc:'속에서부터 번지는 듯한 속광 혈색의 크림 치크.',
+    tags:['cool','warm','neutral','dry','glow','natural'],
+    colors:[
+      {name:'01 애프리콧', hex:'#eda383', img:'images/blurry_01.jpg', hover:'images/blurry_01_hover.jpg'},
+      {name:'02 로지', hex:'#e3909c', img:'images/blurry_02.jpg', hover:'images/blurry_02_hover.jpg'}
+    ]},
+  { id:8, name:'퍼펙테일 아이팔레트', cat:'eye', price:25000, badge:'New',
+    desc:'매일 쓰기 좋은 데일리 쉐이드부터 포인트 컬러까지 담은 팔레트.',
+    tags:['warm','neutral','oily','combi','natural','mlbb'],
+    colors:[
+      {name:'01 웜 브라운', hex:'#9a6a52', img:'images/perfectail_01.jpg', hover:'images/perfectail_01_hover.jpg'},
+      {name:'02 로즈 베이지', hex:'#c29a8c', img:'images/perfectail_02.jpg', hover:'images/perfectail_02_hover.jpg'}
+    ]}
+];
+
+const CAT_NAME = { base:'Base', lip:'Lip', cheek:'Cheek', eye:'Eye' };
+const CATS = [['all','All'],['base','Base'],['lip','Lip'],['cheek','Cheek'],['eye','Eye']];
+const CUSTOM_TABS = [
+  { key:'tone', label:'피부 톤',    opts:[['cool','쿨톤'],['warm','웜톤'],['neutral','뉴트럴']] },
+  { key:'type', label:'피부 타입',  opts:[['dry','건성'],['oily','지성'],['combi','복합성']] },
+  { key:'mood', label:'원하는 무드', opts:[['natural','내추럴'],['glow','글로우'],['mlbb','MLBB']] }
+];
+/* 4 스텝 섹션에 보여줄 상품 id */
+const STEPS = [ ['Base',1], ['Cheek',7], ['Lip',4], ['Eye',8] ];
+
+const won = n => n.toLocaleString('ko-KR') + '원';
+const $ = id => document.getElementById(id);
+const imgBox = (src, cls='') => `<div class="ph ${cls}" data-label="${src}"><img src="${src}" alt="" onerror="this.remove()"></div>`;
+const getP = id => PRODUCTS.find(p => p.id === id);
+
+const selColor = {};
+PRODUCTS.forEach(p => selColor[p.id] = 0);
+
+/* ================= 시작 영상 ================= */
+const intro = $('intro'), introV = $('introVideo');
+const LOGO_HOLD = 2600;   // 로고가 보이는 시간 (ms)
+
+/* ② 흰 화면 + 검정 NAMING. 페이드인 → 잠시 뒤 ③ 웹페이지 */
+function showLogo(){
+  if (intro.classList.contains('logo')) return;
+  intro.classList.add('logo');
+  setTimeout(closeIntro, LOGO_HOLD);
+}
+function closeIntro(){
+  if (intro.classList.contains('hide')) return;
+  intro.classList.add('hide');
+  document.body.classList.remove('lock');
+  introV.pause();
+  setTimeout(() => $('hero').classList.add('ready'), 300);
+}
+/* 영상이 없으면 쿠션 사진 2장으로 대체 */
+function introFallback(){
+  if (intro.classList.contains('fallback')) return;
+  intro.classList.add('fallback');
+  introV.remove();
+  setTimeout(showLogo, 3800);
+}
+/* ① 영상 끝나기 0.8초 전부터 흰 화면으로 덮기 시작 */
+introV.addEventListener('timeupdate', () => { if (introV.duration && introV.duration - introV.currentTime < .8) showLogo(); });
+introV.addEventListener('ended', showLogo);
+introV.addEventListener('error', introFallback);
+setTimeout(() => { if (introV.isConnected && introV.readyState === 0) introFallback(); }, 1500);
+
+/* ================= 히어로 슬라이드 =================
+   배너 이미지 경로 — 장수 늘리면 여기만 추가 */
+const HERO = ['images/hero_1.jpg', 'images/hero_2.jpg', 'images/hero_3.jpg'];
+const HERO_TIME = 5000;
+let heroIdx = 0, heroTimer;
+$('heroSlides').innerHTML = HERO.map((s, i) =>
+  `<div class="slide ph ${i ? '' : 'on'}" data-label="${s}"><img src="${s}" alt="" onerror="this.remove()"></div>`).join('');
+
+function renderHeroDots(){
+  $('heroDots').innerHTML = `<span class="num label">0${heroIdx + 1} / 0${HERO.length}</span>` +
+    HERO.map((_, i) => `<button class="${i === heroIdx ? 'on' : i < heroIdx ? 'done' : ''}" onclick="goHero(${i})" aria-label="배너 ${i + 1}"><i></i></button>`).join('');
+}
+function goHero(i){
+  heroIdx = (i + HERO.length) % HERO.length;
+  document.querySelectorAll('#heroSlides .slide').forEach((el, j) => el.classList.toggle('on', j === heroIdx));
+  renderHeroDots();
+  clearInterval(heroTimer);
+  heroTimer = setInterval(() => goHero(heroIdx + 1), HERO_TIME);   // 클릭하면 타이머 리셋
+}
+goHero(0);
+
+/* 헤더: 스크롤하면 배경 생김 */
+addEventListener('scroll', () => $('header').classList.toggle('solid', scrollY > 60));
+
+/* 마키 */
+$('mq').innerHTML = ('<span>Bold Natural</span><span>✦</span><span><i>Name your own beauty</i></span><span>✦</span>').repeat(8);
+
+/* ================= 컬렉션 ================= */
+let curFilter = 'all';
+function renderFilter(){
+  $('filter').innerHTML = CATS.map(([k,v]) => `<button class="${k===curFilter?'on':''}" onclick="setFilter('${k}')">${v}</button>`).join('');
+}
+function setFilter(k){ curFilter = k; renderFilter(); renderGrid(); }
+
+function renderGrid(){
+  const list = PRODUCTS.filter(p => curFilter==='all' || p.cat===curFilter);
+  $('grid').innerHTML = list.map((p, i) => {
+    const c = p.colors[selColor[p.id]];
+    return `
+    <div class="card" style="animation:fadeUp .7s ${i*.06}s both" onclick="openDetail(${p.id})">
+      <div class="thumb ph" data-label="${c.img}">
+        ${p.badge ? `<span class="tag label">${p.badge}</span>` : ''}
+        <div class="main" id="main${p.id}">${imgBox(c.img)}</div>
+        <div class="hov" id="hov${p.id}">${imgBox(c.hover)}</div>
+      </div>
+      <div class="info">
+        <div><p class="name">${p.name}</p><p class="cname" id="cname${p.id}">${c.name}</p></div>
+        <p class="price">${won(p.price)}</p>
+      </div>
+      <div class="bottom">
+        <div class="chips">${p.colors.map((cl,j) => `<button class="chip ${j===selColor[p.id]?'on':''}" style="background:${cl.hex}" title="${cl.name}" onclick="event.stopPropagation();pickColor(${p.id},${j},this)"></button>`).join('')}</div>
+        <button class="add" onclick="event.stopPropagation();addCart(${p.id},selColor[${p.id}],1)">ADD +</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* 컬러칩 → 이미지·컬러명 교체 */
+function pickColor(pid, idx, el){
+  selColor[pid] = idx;
+  const c = getP(pid).colors[idx];
+  $('main'+pid).innerHTML = imgBox(c.img);
+  $('hov'+pid).innerHTML = imgBox(c.hover);
+  $('cname'+pid).textContent = c.name;
+  el.parentElement.querySelectorAll('.chip').forEach(ch => ch.classList.remove('on'));
+  el.classList.add('on');
+}
+
+/* ================= 파인더 (커스터마이징 탭) ================= */
+let curTab = 0;
+const picks = { tone:null, type:null, mood:null };
+
+function renderFinder(){
+  $('tabs').innerHTML = CUSTOM_TABS.map((t,i) => {
+    const v = picks[t.key] ? t.opts.find(o => o[0]===picks[t.key])[1] : '';
+    return `<button class="tab ${i===curTab?'on':''}" onclick="curTab=${i};renderFinder()">
+      <span class="n">0${i+1}</span><span class="t">${t.label}</span><span class="v">${v}</span></button>`;
+  }).join('');
+
+  const t = CUSTOM_TABS[curTab];
+  $('options').innerHTML = t.opts.map(([k,v]) => `<button class="opt ${picks[t.key]===k?'on':''}" onclick="pickOpt('${t.key}','${k}')">${v}</button>`).join('');
+
+  const active = Object.values(picks).filter(Boolean);
+  const reco = PRODUCTS.filter(p => active.every(a => p.tags.includes(a)));
+  $('reco').innerHTML = !active.length
+    ? `<p class="reco-empty">왼쪽에서 옵션을 골라주세요</p>`
+    : reco.length ? reco.map((p,i) => `
+      <div class="reco-item" style="animation-delay:${i*.08}s" onclick="openDetail(${p.id})">
+        ${imgBox(p.colors[0].img)}
+        <p><b>${p.name}</b><span>${won(p.price)}</span></p>
+      </div>`).join('')
+    : `<p class="reco-empty">조건에 딱 맞는 제품이 없어요. 옵션을 바꿔보세요!</p>`;
+}
+function pickOpt(key, val){
+  picks[key] = picks[key]===val ? null : val;
+  renderFinder();
+  if (picks[key] && curTab < CUSTOM_TABS.length-1) setTimeout(() => { curTab++; renderFinder(); }, 300);
+}
+function resetPicks(){ picks.tone = picks.type = picks.mood = null; curTab = 0; renderFinder(); }
+
+/* ================= 4 스텝 ================= */
+$('stepList').innerHTML = STEPS.map(([kind, pid], i) => {
+  const p = getP(pid);
+  return `<div class="step reveal" onclick="openDetail(${pid})">
+    <span class="no">${i+1}/</span>
+    <span class="kind">${kind}</span>
+    <div><p class="pname">${p.name}</p><p class="pdesc">${p.desc}</p></div>
+    ${imgBox(p.colors[0].hover)}
+  </div>`;
+}).join('');
+
+/* ================= 상세페이지 ================= */
+let dProduct = null, dColor = 0, dQty = 1;
+function openDetail(pid){
+  dProduct = getP(pid); dColor = selColor[pid]; dQty = 1;
+  $('dCat').textContent = CAT_NAME[dProduct.cat];
+  $('dName').textContent = dProduct.name;
+  $('dDesc').textContent = dProduct.desc;
+  $('dPrice').textContent = won(dProduct.price);
+  $('dQty').textContent = 1;
+  renderDetailColor(true);
+  $('detail').scrollTop = 0;
+  $('detail').classList.add('open');
+  document.body.classList.add('lock');
+  setBA(50);
+}
+function renderDetailColor(instant){
+  const c = dProduct.colors[dColor];
+  const box = $('dImgBox');
+  /* 호버 시 상세컷(_side.jpg)이 확대되며 등장, 없으면 같은 이미지를 확대 */
+  const side = c.img.replace(/\.jpg$/, '_side.jpg');
+  const swap = () => { box.dataset.label = c.img; box.innerHTML = `<img src="${c.img}" alt="" onerror="this.remove()">
+    <div class="zlayer"><img src="${side}" alt="" onerror="if(!this.dataset.f){this.dataset.f=1;this.src='${c.img}'}else{this.remove()}"></div>`; };
+  const old = box.querySelector('img');
+  if (instant || !old) swap(); else { old.style.opacity = 0; setTimeout(swap, 250); }
+  $('dColorName').textContent = c.name;
+  setAfter(c, !instant);
+  const chipsHTML = dProduct.colors.map((cl,i) => `<button class="chip ${i===dColor?'on':''}" style="background:${cl.hex}" title="${cl.name}" onclick="dColor=${i};renderDetailColor()"></button>`).join('');
+  $('dChips').innerHTML = $('baChips').innerHTML = chipsHTML;   // 상단 + 비포/애프터 옆 컬러칩 동기화
+  $('baColorName').textContent = c.name;
+}
+function changeDQty(n){ dQty = Math.max(1, dQty+n); $('dQty').textContent = dQty; }
+function addFromDetail(go){ addCart(dProduct.id, dColor, dQty); if (go){ closeDetail(); setTimeout(openCart, 500); } }
+function closeDetail(){ $('detail').classList.remove('open'); document.body.classList.remove('lock'); }
+
+/* 비포/애프터 */
+const ba = $('ba'); let dragging = false, baPct = 50;
+
+/* 컬러별 애프터: layered_19p.jpg → layered_19p_after.jpg (없으면 after.jpg로 대체) */
+function setAfter(c, animate){
+  /* 제품별 비포: layered_19p.jpg → layered_before.jpg (없으면 before.jpg로 대체) */
+  const bsrc = c.img.replace(/_[^_/]+\.jpg$/, '_before.jpg');
+  const bbox = $('baBefore');
+  if (bbox.dataset.src !== bsrc){
+    bbox.dataset.src = bbox.dataset.label = bsrc;
+    bbox.innerHTML = `<img src="${bsrc}" alt="" draggable="false"
+      onerror="if(!this.dataset.f){this.dataset.f=1;this.src='images/before.jpg'}else{this.remove()}">`;
+  }
+  const src = c.img.replace(/\.jpg$/, '_after.jpg');
+  const box = $('baAfter');
+  box.dataset.label = src;
+  box.innerHTML = `<img src="${src}" alt="" draggable="false"
+    onerror="if(!this.dataset.f){this.dataset.f=1;this.src='images/after.jpg'}else{this.remove()}">`;
+  $('baTag').textContent = 'After · ' + c.name;
+  $('baThumb').style.backgroundImage = `url("${src}")`;
+  $('baLinkTxt').textContent = `${c.name} 컬러를 바른 모습 보기`;
+  if (animate) sweepBA();  // 컬러 바꾸면 애프터가 얼굴 전체를 쓸고 지나감
+}
+/* 비포(전체) → 애프터(전체) → 가운데로 돌아오는 연출 */
+let sweepT = [];
+function sweepBA(){
+  sweepT.forEach(clearTimeout);
+  ba.classList.add('anim');
+  setBA(100);
+  sweepT = [
+    setTimeout(() => setBA(0), 80),
+    setTimeout(() => setBA(50), 1500),
+    setTimeout(() => ba.classList.remove('anim'), 2500)
+  ];
+}
+/* 슬라이더가 화면에 들어올 때마다 연출 실행 */
+new IntersectionObserver(es => { if (es[0].isIntersecting && !dragging) sweepBA(); },
+  { root: document.getElementById('detail'), threshold: .5 }).observe(document.getElementById('ba'));
+function setBA(pct){
+  pct = Math.min(100, Math.max(0, pct)); baPct = pct;
+  $('baAfter').style.clipPath = `inset(0 0 0 ${pct}%)`;
+  $('baBar').style.left = $('baHandle').style.left = pct + '%';
+}
+const moveBA = e => { const r = ba.getBoundingClientRect(); setBA((e.clientX - r.left) / r.width * 100); };
+ba.addEventListener('pointerdown', e => { dragging = true; ba.classList.add('dragging'); ba.setPointerCapture(e.pointerId); moveBA(e); });
+ba.addEventListener('pointermove', e => { if (dragging) moveBA(e); moveLens(e); });
+ba.addEventListener('pointerup', () => { dragging = false; ba.classList.remove('dragging'); });
+
+/* 돋보기 렌즈: 커서 아래 이미지(비포 or 애프터)를 2.5배 확대 */
+function moveLens(e){
+  const r = ba.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, Z = 2.5, L = 90;
+  const layer = (x / r.width * 100) < baPct ? ba.children[0] : $('baAfter');
+  const img = layer.querySelector('img'), lens = $('baLens');
+  lens.style.left = (x - L) + 'px'; lens.style.top = (y - L) + 'px';
+  if (!img){ lens.style.backgroundImage = 'none'; return; }
+  lens.style.backgroundImage = `url("${img.currentSrc || img.src}")`;
+  lens.style.backgroundSize = `${r.width * Z}px ${r.height * Z}px`;
+  lens.style.backgroundPosition = `${-(x * Z - L)}px ${-(y * Z - L)}px`;
+}
+
+/* 호버 확대: 커서 위치를 따라 확대 중심 이동 (상세 이미지 + 상품 카드) */
+document.addEventListener('mousemove', e => {
+  const z = e.target.closest('.zoomable, .card .thumb');
+  if (!z) return;
+  const r = z.getBoundingClientRect();
+  const o = `${(e.clientX - r.left) / r.width * 100}% ${(e.clientY - r.top) / r.height * 100}%`;
+  z.querySelectorAll('.zlayer img, .hov img').forEach(i => i.style.transformOrigin = o);
+});
+
+/* ================= 장바구니 ================= */
+let cart = [];
+try { cart = JSON.parse(localStorage.getItem('namingCart')) || []; } catch(e){}
+const saveCart = () => { try { localStorage.setItem('namingCart', JSON.stringify(cart)); } catch(e){} };
+
+function addCart(pid, ci, q){
+  const ex = cart.find(i => i.pid===pid && i.c===ci);
+  ex ? ex.q += q : cart.push({pid, c:ci, q});
+  saveCart(); renderCart();
+  const p = getP(pid);
+  toast(`${p.name} · ${p.colors[ci].name} 담았어요`);
+}
+function changeQty(i, n){ cart[i].q += n; if (cart[i].q < 1) cart.splice(i,1); saveCart(); renderCart(); }
+function removeItem(i){ cart.splice(i,1); saveCart(); renderCart(); }
+
+function renderCart(){
+  const count = cart.reduce((s,i) => s+i.q, 0);
+  $('cartCount').textContent = $('cCount').textContent = count;
+  if (!cart.length){ $('cList').innerHTML = `<p class="c-empty serif">Your cart<br><i>is empty.</i></p>`; $('cTotal').textContent = '0원'; return; }
+  let total = 0;
+  $('cList').innerHTML = cart.map((it,i) => {
+    const p = getP(it.pid), c = p.colors[it.c];
+    total += p.price * it.q;
+    return `<div class="c-item">
+      ${imgBox(c.img)}
+      <div>
+        <p class="n">${p.name}</p>
+        <p class="o"><i style="background:${c.hex}"></i>${c.name}</p>
+        <div class="qty"><button onclick="changeQty(${i},-1)">−</button><span>${it.q}</span><button onclick="changeQty(${i},1)">+</button></div>
+      </div>
+      <div class="right"><span>${won(p.price*it.q)}</span><button class="del" onclick="removeItem(${i})">Remove</button></div>
+    </div>`;
+  }).join('');
+  $('cTotal').textContent = won(total);
+}
+function openCart(){ $('cart').classList.add('open'); $('dim').classList.add('on'); }
+function closeCart(){ $('cart').classList.remove('open'); $('dim').classList.remove('on'); }
+
+let tt;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('on'), 1800); }
+document.addEventListener('keydown', e => { if (e.key==='Escape'){ closeCart(); closeDetail(); } });
+
+/* 스크롤 등장 애니메이션 */
+const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold:.15 });
+document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+renderFilter(); renderGrid(); renderFinder(); renderCart();
+</script>
+</body>
+</html>
